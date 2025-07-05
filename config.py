@@ -12,7 +12,7 @@ OPENAI_CONFIG = {
 
 MISTRAL_CONFIG = {
     "api_key": os.getenv("MISTRAL_API_KEY"),
-    "default_model": "mistral-7b",
+    "default_model": "mistral-large-latest",
     "temperature": 0.1,
 }
 

@@ -13,11 +13,13 @@ from typing import Dict, Any, List, Optional
 
 from dotenv import load_dotenv
 from openai import OpenAI
+from mistralai import Mistral
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 
-from config import OPENAI_CONFIG
+#from config import OPENAI_CONFIG
+from config import MISTRAL_CONFIG
 
 # Path to the MCP server script
 MCP_SERVER_PATH = os.path.join(os.path.dirname(
@@ -26,9 +28,10 @@ MCP_SERVER_PATH = os.path.join(os.path.dirname(
 class arXivAgent:
     """An agent that uses the arXiv MCP server to find scientific papers."""
 
-    def __init__(self, openai_api_key: str):
-        """Initialize the agent with OpenAI client."""
-        self.openai_client = OpenAI(api_key=openai_api_key)
+    def __init__(self, api_key: str):
+        """Initialize the agent with OpenAI and MistralAI clients."""
+#        self.openai_client = OpenAI(api_key=OPENAI_CONFIG.get("api_key"))
+        self.mistral_client = Mistral(api_key=MISTRAL_CONFIG.get("api_key"))
         self.mcp_server_process = None
 
     async def start_mcp_server(self) -> subprocess.Popen:
@@ -117,14 +120,15 @@ class arXivAgent:
             if not tools:
                 return "Failed to get MCP server capabilities"
 
-            # Create the messages for the OpenAI API
+            # Create the messages for the API
             messages = [
                 {"role": "system", "content": "You are a helpful assistant that can search for scientific papers on arXiv. Use the search_arxiv_papers tool to find papers related to the user's query."},
                 {"role": "user", "content": user_question}
             ]
 
-            # Make the API call to OpenAI
-            response = self.openai_client.chat.completions.create(
+            # Make the API call to AI
+            #response = self.openai_client.chat.completions.create(
+            response = self.mistral_client.chat.complete(
                 model = model,
                 messages = messages,
                 tools = tools,
@@ -136,7 +140,7 @@ class arXivAgent:
 
             # Add the assistant message with tool_calls
             assistant_msg = {"role": "assistant", "content": assistant_message.content or ""}
-            # Only add tool_calls if your OpenAI client and API version support it
+            # Only add tool_calls if your AI client and API version support it
             if hasattr(assistant_message, "tool_calls") and assistant_message.tool_calls:
                 # If tool_calls is expected to be a string, serialize it as JSON
                 assistant_msg["tool_calls"] = json.dumps([
@@ -158,7 +162,6 @@ class arXivAgent:
                     # Retrieve the tool parameters
                     function_name = tool_call.function.name
                     arguments = json.loads(tool_call.function.arguments)
-
                     # Call the tool
                     tool_result = await self.call_tool(process, function_name, arguments)
 
@@ -169,15 +172,21 @@ class arXivAgent:
                         "content": tool_result
                     })
 
-                # Ask OpenAI for a final answer
-                second_response = self.openai_client.chat.completions.create(
-                    model = OPENAI_CONFIG.get("default_model", "gpt-4-turbo"),
+                # Ask Mistral for a final answer
+                second_response = self.mistral_client.chat.complete(
+                    model = MISTRAL_CONFIG.get("default_model", "mistral-large-latest"),
                     messages = messages
                 )
 
-                return second_response.choices[0].message.content or ""
+                content = second_response.choices[0].message.content
+                if isinstance(content, list):
+                    # Join all content chunks into a single string
+                    return "".join(str(chunk) for chunk in content)
+                return content or ""
 
             # If there are no tool calls, return the original answer
+            if isinstance(assistant_message.content, list):
+                return "".join(str(chunk) for chunk in assistant_message.content)
             return assistant_message.content or "No response from assistant"
 
         finally:

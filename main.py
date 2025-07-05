@@ -3,7 +3,7 @@ import traceback
 import asyncio
 from agents.simple_arxiv_mcp_agent import arXivAgent
 
-from config import OPENAI_CONFIG
+from config import OPENAI_CONFIG, MISTRAL_CONFIG
 
 async def main():
 
@@ -19,8 +19,18 @@ async def main():
         print("Error: OPENAI_API_KEY is not set in the environment or .env file")
         sys.exit(1)
 
+    if not MISTRAL_CONFIG:
+        print("Error: MISTRAL_CONFIG is not set. Please check your configuration.")
+        sys.exit(1)
+    # Get the Mistral API key from the configuration
+    mistral_api_key = MISTRAL_CONFIG.get("api_key")
+
+    if not mistral_api_key:
+        print("Error: MISTRAL_API_KEY is not set in the environment or .env file")
+        sys.exit(1)
+
     # Start the agent
-    agent = arXivAgent(openai_api_key)
+    agent = arXivAgent(mistral_api_key)
 
     # Ask for user input or use a default question
     user_question = input(
@@ -32,8 +42,9 @@ async def main():
         # Perform the conversation
         response = await agent.run_conversation(
             user_question,
-            OPENAI_CONFIG.get("default_model") or "gpt-4.1"
+            MISTRAL_CONFIG.get("default_model") or "mistral-large-latest",
         )
+
         print("\nAgent Response:")
         print(response)
     except Exception as e:
