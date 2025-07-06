@@ -11,13 +11,12 @@ import sys
 
 from typing import Dict, Any, List, Optional
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 
-from config import OPENAI_CONFIG
+from config import OLLAMA_CONFIG
 
 # Path to the MCP server script
 MCP_SERVER_PATH = os.path.join(os.path.dirname(
@@ -28,7 +27,7 @@ class arXivAgent:
 
     def __init__(self, openai_api_key: str):
         """Initialize the agent with OpenAI client."""
-        self.openai_client = OpenAI(api_key=openai_api_key)
+        self.openai_client = OpenAI(api_key=openai_api_key,base_url='http://localhost:11434/v1/')
         self.mcp_server_process = None
 
     async def start_mcp_server(self) -> subprocess.Popen:
@@ -169,9 +168,11 @@ class arXivAgent:
                         "content": tool_result
                     })
 
+                    print(messages)
+
                 # Ask OpenAI for a final answer
                 second_response = self.openai_client.chat.completions.create(
-                    model = OPENAI_CONFIG.get("default_model", "gpt-4-turbo"),
+                    model = OLLAMA_CONFIG.get("default_model", "mistral"),
                     messages = messages
                 )
 

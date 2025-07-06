@@ -3,17 +3,17 @@ import traceback
 import asyncio
 from agents.simple_arxiv_mcp_agent import arXivAgent
 
-from config import OPENAI_CONFIG
+from config import OLLAMA_CONFIG
 
 async def main():
 
     """Main function that starts the agent and processes a question."""
     # Load environment variables
-    if not OPENAI_CONFIG:
+    if not OLLAMA_CONFIG:
         print("Error: OPENAI_CONFIG is not set. Please check your configuration.")
         sys.exit(1)
     # Get the OpenAI API key from the configuration
-    openai_api_key = OPENAI_CONFIG.get("api_key")
+    openai_api_key = OLLAMA_CONFIG.get("api_key")
 
     if not openai_api_key:
         print("Error: OPENAI_API_KEY is not set in the environment or .env file")
@@ -32,7 +32,7 @@ async def main():
         # Perform the conversation
         response = await agent.run_conversation(
             user_question,
-            OPENAI_CONFIG.get("default_model") or "gpt-4.1"
+            OLLAMA_CONFIG.get("default_model") or "mistral"
         )
         print("\nAgent Response:")
         print(response)

@@ -21,3 +21,9 @@ GEMINI_CONFIG = {
     "default_model": "gemini-1",
     "temperature": 0.1,
 }
+
+OLLAMA_CONFIG = {
+    "api_key": os.getenv("OLLAMA_API_KEY"),
+    "default_model": "mistral",
+    "temperature": 0.1}
+
