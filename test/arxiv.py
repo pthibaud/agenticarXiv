@@ -22,6 +22,10 @@ finally:
         abstracts.append(paper.summary)
         
         print(paper_info)
+import os
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
 
 from config import MISTRAL_CONFIG
 from mistralai import Mistral
