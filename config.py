@@ -21,3 +21,9 @@ GEMINI_CONFIG = {
     "default_model": "gemini-1",
     "temperature": 0.1,
 }
+
+ZOTERO_CONFIG = {
+    "api_key" : os.getenv("ZOTERO_API_KEY"),
+    "type": "user",
+    "user": os.getenv("ZOTERO_USER")
+}
